@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""
+Minotaur Interactive CLI - User-friendly interactive interface
+"""
+
+import asyncio
+import json
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+def print_banner():
+    """Print Minotaur banner"""
+    print("""
+        ▖  ▖▄▖▖ ▖▄▖▄▖▄▖▖▖▄▖
+        ▛▖▞▌▐ ▛▖▌▌▌▐ ▌▌▌▌▙▘
+        ▌▝ ▌▟▖▌▝▌▙▌▐ ▛▌▙▌▌▌
+    """)
+
+def get_user_input(prompt, default=None):
+    """Get user input with optional default value"""
+    if default:
+        user_input = input(f"{prompt} [{default}]: ").strip()
+        return user_input if user_input else default
+    else:
+        return input(f"{prompt}: ").strip()
+
+def validate_github_url(url):
+    """Validate GitHub URL format"""
+    if not url.startswith(('http://github.com/', 'https://github.com/')):
+        return False
+    return True
+
+async def interactive_analysis():
+    """Run interactive analysis"""
+    print_banner()
+
+    # Check configuration
+    from config.settings import settings
+    errors = settings.validate()
+    if errors:
+        print("❌ Configuration issues found:")
+        for error in errors:
+            print(f"  • {error}")
+        print("\n💡 Run 'python setup.py' to configure the tool")
+        return
+
+    print("✅ Configuration looks good!")
+    print()
+
+    # Get repository URL
+    while True:
+        repo_url = get_user_input("Enter GitHub repository URL")
+        if validate_github_url(repo_url):
+            break
+        else:
+            print("❌ Please enter a valid GitHub URL (e.g., https://github.com/user/repo)")
+
+    # Get analysis options
+    print("\n📋 Analysis Options:")
+
+    include_transitive = get_user_input("Include transitive dependencies?", "y").lower() in ['y', 'yes']
+
+    max_deps_input = get_user_input("Maximum dependencies to analyze", "1000")
+    try:
+        max_dependencies = int(max_deps_input)
+    except ValueError:
+        max_dependencies = 1000
+        print("⚠️  Using default value: 1000")
+
+    output_format = get_user_input("Output format (json/summary)", "summary").lower()
+    if output_format not in ['json', 'summary']:
+        output_format = 'summary'
+
+    save_report = get_user_input("Save report to file (optional)", "")
+    if not save_report:
+        save_report = None
+
+    # Confirm analysis
+    print(f"\n🔍 Analysis Summary:")
+    print(f"  Repository: {repo_url}")
+    print(f"  Transitive deps: {'Yes' if include_transitive else 'No'}")
+    print(f"  Max dependencies: {max_dependencies}")
+    print(f"  Output format: {output_format}")
+    if save_report:
+        print(f"  Save to: {save_report}")
+
+    confirm = get_user_input("\nStart analysis?", "y").lower()
+    if confirm not in ['y', 'yes']:
+        print("❌ Analysis cancelled")
+        return
+
+    # Run analysis
+    print(f"\n🚀 Starting analysis of {repo_url}")
+    print("This may take a few minutes...")
+
+    try:
+        from app.core.analysis_engine import AnalysisEngine
+        from app.models.analysis import AnalysisRequest
+
+        # Create analysis request
+        request = AnalysisRequest(
+            repo_url=repo_url,
+            include_transitive=include_transitive,
+            max_dependencies=max_dependencies,
+            triage_threshold=0.7
+        )
+
+        # Initialize engine
+        engine = AnalysisEngine(
+            max_dependencies=request.max_dependencies,
+            osv_api_url=settings.OSV_API_BASE_URL,
+            openai_api_key=settings.OPENAI_API_KEY
+        )
+
+        # Perform analysis
+        report = await engine.analyze_repository(request)
+
+        # Display results
+        print(f"\n🎉 Analysis Complete!")
+        print(f"  Dependencies analyzed: {report.dependencies_analyzed}")
+        print(f"  Vulnerabilities found: {report.vulnerabilities_found}")
+        print(f"  Real threats: {report.real_threats}")
+        print(f"  Duration: {report.analysis_duration:.2f} seconds")
+
+        if report.vulnerability_reports:
+            print(f"\n📊 Vulnerability Summary:")
+            print(f"  Critical: {report.critical_count}")
+            print(f"  High: {report.high_count}")
+            print(f"  Medium: {report.medium_count}")
+            print(f"  Low: {report.low_count}")
+
+            if report.real_threats > 0:
+                print(f"\n⚠️  Real Threats Found:")
+                for vuln_report in report.vulnerability_reports:
+                    if vuln_report.is_real_threat:
+                        print(f"  • {vuln_report.dependency} {vuln_report.dependency_version}")
+                        print(f"    {vuln_report.vulnerability.id}: {vuln_report.vulnerability.summary}")
+                        print(f"    Threat Level: {vuln_report.threat_level}")
+                        print(f"    Recommendation: {vuln_report.recommendation}")
+                        print()
+
+        # Save report if requested
+        if save_report:
+            with open(save_report, 'w') as f:
+                json.dump(report.dict(), f, indent=2, default=str)
+            print(f"📄 Report saved to: {save_report}")
+
+        if report.real_threats > 0:
+            print("❌ Vulnerabilities found - please review and take action")
+        else:
+            print("✅ No real threats found")
+
+    except Exception as e:
+        print(f"❌ Analysis failed: {e}")
+
+def main():
+    """Main interactive CLI entry point"""
+    try:
+        asyncio.run(interactive_analysis())
+    except KeyboardInterrupt:
+        print("\n\n❌ Analysis interrupted by user")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+
+if __name__ == "__main__":
+    main()
