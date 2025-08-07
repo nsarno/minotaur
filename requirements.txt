@@ -1,8 +1,8 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-langchain==0.0.350
+langchain==0.1.0
 langchain-openai==0.0.2
-langchain-core==0.1.0
+langchain-core==0.1.21
 requests==2.31.0
 pydantic==2.5.0
 python-multipart==0.0.6
