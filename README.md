@@ -150,6 +150,53 @@ Run the test suite:
 pytest tests/
 ```
 
+## Deployment
+
+### Heroku Deployment
+
+1. **Create a Heroku app**:
+
+   ```bash
+   heroku create your-app-name
+   ```
+
+2. **Set environment variables**:
+
+   ```bash
+   heroku config:set OPENAI_API_KEY=your-openai-api-key
+   heroku config:set OPENAI_MODEL=gpt-3.5-turbo
+   ```
+
+3. **Deploy the application**:
+
+   ```bash
+   git add .
+   git commit -m "Deploy to Heroku"
+   git push heroku main
+   ```
+
+4. **Open the application**:
+
+   ```bash
+   heroku open
+   ```
+
+The application will be available at `https://your-app-name.herokuapp.com`
+
+### Docker Deployment
+
+1. **Build the Docker image**:
+
+   ```bash
+   docker build -t minotaur .
+   ```
+
+2. **Run the container**:
+
+   ```bash
+   docker run -p 8000:8000 -e OPENAI_API_KEY=your-key minotaur
+   ```
+
 ## License
 
 MIT License

@@ -1,0 +1,39 @@
+{
+  "name": "minotaur",
+  "description": "Dependency Threat Radar - A cybersecurity tool that analyzes GitHub repositories for dependency vulnerabilities",
+  "repository": "https://github.com/yourusername/minotaur",
+  "keywords": [
+    "python",
+    "fastapi",
+    "security",
+    "vulnerabilities",
+    "dependencies"
+  ],
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key for LLM-based vulnerability triage",
+      "required": true
+    },
+    "OPENAI_MODEL": {
+      "description": "OpenAI model to use for triage",
+      "value": "gpt-3.5-turbo",
+      "required": false
+    },
+    "OSV_API_BASE_URL": {
+      "description": "OSV API base URL",
+      "value": "https://api.osv.dev",
+      "required": false
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+}
