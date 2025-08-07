@@ -183,6 +183,8 @@ pytest tests/
 
 The application will be available at `https://your-app-name.herokuapp.com`
 
+**Note**: The application uses Python 3.11 (specified in `.python-version`) and will automatically use the latest available Python 3.11.x version on Heroku.
+
 ### Docker Deployment
 
 1. **Build the Docker image**:
