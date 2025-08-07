@@ -1,25 +1,24 @@
 from enum import Enum
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class DependencyType(str, Enum):
-    """Supported dependency types"""
+    """Dependency type enumeration"""
     NPM = "npm"
     PYTHON = "python"
 
 
 class Dependency(BaseModel):
-    """Represents a package dependency"""
-    name: str = Field(..., description="Package name")
-    version: str = Field(..., description="Package version")
-    dependency_type: DependencyType = Field(..., description="Type of dependency")
-    is_direct: bool = Field(..., description="Whether this is a direct dependency")
-    parent: Optional[str] = Field(None, description="Parent package if transitive")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    """Represents a software dependency"""
+    name: str
+    version: str
+    dependency_type: DependencyType
+    is_direct: bool = True
+    parent: Optional[str] = None
+    metadata: Dict[str, Any] = {}
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(from_attributes=True)
 
     def __str__(self) -> str:
         return f"{self.name}@{self.version} ({self.dependency_type})"
