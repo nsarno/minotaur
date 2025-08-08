@@ -160,14 +160,21 @@ pytest tests/
    heroku create your-app-name
    ```
 
-2. **Set environment variables**:
+2. **Add the required buildpacks**:
+
+   ```bash
+   heroku buildpacks:add heroku-community/apt
+   heroku buildpacks:add heroku/python
+   ```
+
+3. **Set environment variables**:
 
    ```bash
    heroku config:set OPENAI_API_KEY=your-openai-api-key
    heroku config:set OPENAI_MODEL=gpt-3.5-turbo
    ```
 
-3. **Deploy the application**:
+4. **Deploy the application**:
 
    ```bash
    git add .
@@ -175,7 +182,7 @@ pytest tests/
    git push heroku main
    ```
 
-4. **Open the application**:
+5. **Open the application**:
 
    ```bash
    heroku open
@@ -183,7 +190,7 @@ pytest tests/
 
 The application will be available at `https://your-app-name.herokuapp.com`
 
-**Note**: The application uses Python 3.11 (specified in `.python-version`) and will automatically use the latest available Python 3.11.x version on Heroku.
+**Note**: The application uses Python 3.11 (specified in `.python-version`) and will automatically use the latest available Python 3.11.x version on Heroku. The `Aptfile` ensures that `git` is installed on Heroku, which is required for repository cloning.
 
 ### Docker Deployment
 

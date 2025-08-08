@@ -4,8 +4,14 @@ import shutil
 import asyncio
 from pathlib import Path
 from typing import Optional
-import git
 from urllib.parse import urlparse
+
+try:
+    import git
+    GIT_AVAILABLE = True
+except ImportError as e:
+    GIT_AVAILABLE = False
+    print(f"Warning: gitpython not available: {e}")
 
 from ..models.dependency import Dependency, DependencyType
 
@@ -16,6 +22,12 @@ class RepositoryService:
     def __init__(self, clone_timeout: int = 300):
         self.clone_timeout = clone_timeout
         self.temp_dir = None
+
+        if not GIT_AVAILABLE:
+            raise RuntimeError(
+                "GitPython is not available. Please ensure git is installed and GitPython is properly configured. "
+                "On Heroku, this requires the heroku-community/apt buildpack and an Aptfile containing 'git'."
+            )
 
     async def clone_repository(self, repo_url: str) -> Path:
         """
